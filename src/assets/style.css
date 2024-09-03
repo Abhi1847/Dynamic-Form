@@ -1,0 +1,91 @@
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  height: 8rem;
+  width: 80vw;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0px;
+  margin-bottom: 0.5rem;
+}
+
+.img {
+  width: 30%;
+  height: 100%;
+  margin-right: 5px;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  border: 2px solid black;
+}
+
+.content {
+  width: 69%;
+  height: 100%;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  border: 2px solid black;
+}
+
+.mheader {
+  border: 0.3rem solid black;
+  height: 5rem;
+  width: 80vw;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.desc {
+    border: 0.3rem solid black;
+    height: 10rem;
+  width: 80vw;
+  display: flex;
+  margin-bottom: 0.3rem;
+}
+
+.uinfo-container{
+    display: flex;
+    justify-content: space-between;
+    height: 5rem;
+    width: 80vw;
+}
+.uinfo{
+    border: 0.3rem solid black;
+}
+
+.date{
+    border: 0.3rem solid black;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .input-group label {
+    margin-bottom: 5px; /* Spacing between label and input */
+  }
+  
+  .input-group input {
+    padding: 5px; /* Adjust input padding */
+    margin-bottom: 0.3rem;
+  }
