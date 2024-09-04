@@ -1,0 +1,33 @@
+---
+name: Build and Deploy React App
+on:
+  push:
+    branches: [main]
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    run-on: ubuntu-latest
+    env:
+      BUCKET:
+      DIST: build
+      REGION: us-west-2
+
+    steps:
+     - name: Checkout
+       uses: action/checkout@v2
+
+     - name: Configure AWS Credentials
+       uses: aws-action/configure-aws-credentials@v1
+       with:
+         aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+         aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+         aws-region: ${{env.REGION}}
+
+     - name: Install Dependencies
+       run:
+         node --version
+         npm ci
+         
+     - name: Build Static Website
+       run: npm run build
+    
