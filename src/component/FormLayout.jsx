@@ -25,8 +25,12 @@ function FormLayout() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const formresponse = await axios.get("http://localhost:3000/form");
-        const fieldresponse = await axios.get("http://localhost:3000/field");
+        const formresponse = await axios.get(
+          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/form/2"
+        );
+        const fieldresponse = await axios.get(
+          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/field"
+        );
 
         setformdata(formresponse.data);
         setfielddata(fieldresponse.data);
@@ -50,7 +54,7 @@ function FormLayout() {
   useEffect(() => {
     if (fielddata?.field) {
       const slicedData = fielddata.field.slice(9, 10);
-      console.log("sliceddata...", slicedData);
+      // console.log("sliceddata...", slicedData);
       setcheckdata(slicedData);
     }
   }, [fielddata]);
@@ -78,6 +82,7 @@ function FormLayout() {
   };
 
   const handleTextfieldChange = (e, fieldid) => {
+    console.log("text change...", fieldid);
     setTextFieldData({
       ...textFieldData,
       [fieldid]: e.target.value,
@@ -104,7 +109,7 @@ function FormLayout() {
       formid: formdata.formid,
     };
     const response = await axios.post(
-      "http://localhost:3000/submit-form",
+      "https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/submit-form",
       formSubmissionData
     );
     console.log("Form data is:...", formSubmissionData);
@@ -282,6 +287,7 @@ function FormLayout() {
                 <Typography variant="body1" key={index}>
                   {item.fieldinfo}
                 </Typography>
+
                 <Grid container>
                   {item.fieldoptions?.options?.map((option, idx) => (
                     <Grid item xs={12} sm={4} md={4} key={idx}>
@@ -308,6 +314,7 @@ function FormLayout() {
                     </Grid>
                   ))}
                 </Grid>
+
                 <TextField
                   fullWidth
                   multiline

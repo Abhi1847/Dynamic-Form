@@ -8,7 +8,7 @@ jobs:
     name: Build and Deploy
     run-on: ubuntu-latest
     env:
-      BUCKET:
+      BUCKET: dynamic-forms
       DIST: build
       REGION: us-west-2
 
@@ -27,7 +27,7 @@ jobs:
        run:
          node --version
          npm ci
-         
+
      - name: Build Static Website
        run: npm run build
     
