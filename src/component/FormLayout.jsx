@@ -26,10 +26,10 @@ function FormLayout() {
     const fetchData = async () => {
       try {
         const formresponse = await axios.get(
-          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/form/2"
+          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/form/2"
         );
         const fieldresponse = await axios.get(
-          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/field"
+          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/field"
         );
 
         setformdata(formresponse.data);
@@ -109,7 +109,7 @@ function FormLayout() {
       formid: formdata.formid,
     };
     const response = await axios.post(
-      "https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/submit-form",
+      "https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/submit-form",
       formSubmissionData
     );
     console.log("Form data is:...", formSubmissionData);
