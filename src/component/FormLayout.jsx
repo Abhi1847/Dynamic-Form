@@ -26,7 +26,7 @@ function FormLayout() {
     const fetchData = async () => {
       try {
         const formresponse = await axios.get(
-          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/form/2"
+          " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/form"
         );
         const fieldresponse = await axios.get(
           " https://tqfjcc41j0.execute-api.us-west-2.amazonaws.com/dev/field"
