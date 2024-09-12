@@ -21,10 +21,12 @@ function FormLayout() {
   const [stepdata, setstepdata] = useState([]);
   const [textFieldData, setTextFieldData] = useState({});
   const [checkboxData, setCheckboxData] = useState([]);
+  const [loading, setloading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setloading(true);
         const formresponse = await axios.get(
           "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form"
         );
@@ -34,8 +36,10 @@ function FormLayout() {
 
         setformdata(formresponse.data);
         setfielddata(fieldresponse.data);
+        setloading(false);
       } catch (err) {
         console.log("Error:", err);
+        setloading(false);
       }
     };
 
@@ -136,142 +140,146 @@ function FormLayout() {
       elevation={3}
       sx={{ padding: 4, maxWidth: "800px", margin: "0 auto" }}
     >
-      {step === 1 && (
-        <>
-          <Box mb={4} alignItems="center">
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={3}>
-                <Box
-                  component="img"
-                  src={avtar}
-                  alt="Department Logo"
-                  sx={{ width: "100%", height: "auto" }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={9}>
-                <Typography variant="h6" align="center">
-                  {formdata.formdescription?.description[0]}
-                </Typography>
-                <Typography variant="subtitle1" align="center">
-                  {formdata.formdescription?.description[1]}
-                </Typography>
-                <Typography variant="subtitle2" align="center">
-                  {formdata.formdescription?.description[2]}
-                </Typography>
-                <Typography variant="body2" align="center">
-                  {formdata.formdescription?.description[3]}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Typography variant="h5" mt={2} align="center">
-              {formdata.formtitle}
-            </Typography>
-            <Typography variant="body1" align="center">
-              {formdata.formdescription?.description[4]}
-            </Typography>
-            <Typography variant="subtitle2" mt={2}>
-              {formdata.formdescription?.description[5]}
-            </Typography>
-            <Typography variant="subtitle2" mt={2}>
-              {formdata.formdescription?.description[6]}
-            </Typography>
-          </Box>
-
-          <Box mb={4}>
-            <Grid container justifyContent="space-between">
-              <Grid item xs={12} sm={4}>
-                {fielddata.field?.slice(0, 2).map((data) => (
-                  <TextField
-                    fullWidth
-                    label={data.fieldtitle}
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    value={textFieldData[data.fieldid] || ""}
-                    onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        step === 1 && (
+          <>
+            <Box mb={4} alignItems="center">
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={3}>
+                  <Box
+                    component="img"
+                    src={avtar}
+                    alt="Department Logo"
+                    sx={{ width: "100%", height: "auto" }}
                   />
-                ))}
-              </Grid>
+                </Grid>
 
-              <Grid item xs={12} sm={4}>
-                {fielddata.field?.slice(2, 3).map((data) => (
-                  <TextField
-                    fullWidth
-                    label={data.fieldtitle}
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    value={textFieldData[data.fieldid] || ""}
-                    onChange={(e) => handleTextfieldChange(e, data.fieldid)}
-                  />
-                ))}
-                {fielddata.field?.slice(10, 11).map((data) => (
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    value={textFieldData[data.fieldid] || ""}
-                    onChange={(e) => handleTextfieldChange(e, data.fieldid)}
-                  />
-                ))}
+                <Grid item xs={12} sm={9}>
+                  <Typography variant="h6" align="center">
+                    {formdata.formdescription?.description[0]}
+                  </Typography>
+                  <Typography variant="subtitle1" align="center">
+                    {formdata.formdescription?.description[1]}
+                  </Typography>
+                  <Typography variant="subtitle2" align="center">
+                    {formdata.formdescription?.description[2]}
+                  </Typography>
+                  <Typography variant="body2" align="center">
+                    {formdata.formdescription?.description[3]}
+                  </Typography>
+                </Grid>
               </Grid>
-            </Grid>
-          </Box>
-
-          <Box mb={4} mt={4}>
-            {fielddata.group?.slice(0, 1).map((data) => (
-              <Typography variant="h6" key={data.groupid}>
-                {data.grouptitle}
+              <Typography variant="h5" mt={2} align="center">
+                {formdata.formtitle}
               </Typography>
-            ))}
-            {data?.map((item, index) => (
-              <React.Fragment key={index}>
-                <Typography variant="body1"> {item.fieldinfo}</Typography>
-                <Grid container mt={1}>
-                  {item.fieldoptions?.options?.map((groupdata, idx) => (
-                    <Grid item xs={12} sm={4} key={idx}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={checkboxData.some(
-                              (data) =>
-                                data.id === item.groupid &&
-                                data.option === groupdata
-                            )}
-                            onChange={(e) =>
-                              handleCheckBoxChange(
-                                e,
-                                groupdata,
-                                item.groupid,
-                                item.fieldid
-                              )
-                            }
-                          />
-                        }
-                        label={groupdata}
-                      />
-                    </Grid>
+              <Typography variant="body1" align="center">
+                {formdata.formdescription?.description[4]}
+              </Typography>
+              <Typography variant="subtitle2" mt={2}>
+                {formdata.formdescription?.description[5]}
+              </Typography>
+              <Typography variant="subtitle2" mt={2}>
+                {formdata.formdescription?.description[6]}
+              </Typography>
+            </Box>
+
+            <Box mb={4}>
+              <Grid container justifyContent="space-between">
+                <Grid item xs={12} sm={4}>
+                  {fielddata.field?.slice(0, 2).map((data) => (
+                    <TextField
+                      fullWidth
+                      label={data.fieldtitle}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                      value={textFieldData[data.fieldid] || ""}
+                      onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+                    />
                   ))}
                 </Grid>
-              </React.Fragment>
-            ))}
-          </Box>
 
-          <Box mb={4}>
-            {fielddata.field?.slice(5, 7).map((data) => (
-              <>
-                <Typography variant="body1" key={data.fieldid}>
-                  {data.fieldinfo}
+                <Grid item xs={12} sm={4}>
+                  {fielddata.field?.slice(2, 3).map((data) => (
+                    <TextField
+                      fullWidth
+                      label={data.fieldtitle}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                      value={textFieldData[data.fieldid] || ""}
+                      onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+                    />
+                  ))}
+                  {fielddata.field?.slice(10, 11).map((data) => (
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      value={textFieldData[data.fieldid] || ""}
+                      onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+                    />
+                  ))}
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box mb={4} mt={4}>
+              {fielddata.group?.slice(0, 1).map((data) => (
+                <Typography variant="h6" key={data.groupid}>
+                  {data.grouptitle}
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={textFieldData[data.fieldid] || ""}
-                  onChange={(e) => handleTextfieldChange(e, data.fieldid)}
-                />
-              </>
-            ))}
-          </Box>
-        </>
+              ))}
+              {data?.map((item, index) => (
+                <React.Fragment key={index}>
+                  <Typography variant="body1"> {item.fieldinfo}</Typography>
+                  <Grid container mt={1}>
+                    {item.fieldoptions?.options?.map((groupdata, idx) => (
+                      <Grid item xs={12} sm={4} key={idx}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={checkboxData.some(
+                                (data) =>
+                                  data.id === item.groupid &&
+                                  data.option === groupdata
+                              )}
+                              onChange={(e) =>
+                                handleCheckBoxChange(
+                                  e,
+                                  groupdata,
+                                  item.groupid,
+                                  item.fieldid
+                                )
+                              }
+                            />
+                          }
+                          label={groupdata}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </React.Fragment>
+              ))}
+            </Box>
+
+            <Box mb={4}>
+              {fielddata.field?.slice(5, 7).map((data) => (
+                <>
+                  <Typography variant="body1" key={data.fieldid}>
+                    {data.fieldinfo}
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    value={textFieldData[data.fieldid] || ""}
+                    onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+                  />
+                </>
+              ))}
+            </Box>
+          </>
+        )
       )}
 
       {step === 2 && (
