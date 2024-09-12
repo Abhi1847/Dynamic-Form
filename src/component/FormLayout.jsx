@@ -8,6 +8,7 @@ import {
   Paper,
   Box,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import avtar from "../assets/avtar.jpg";
 import axios from "axios";
@@ -141,7 +142,14 @@ function FormLayout() {
       sx={{ padding: 4, maxWidth: "800px", margin: "0 auto" }}
     >
       {loading ? (
-        <p>Loading...</p>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+        >
+          <CircularProgress color="secondary" />
+        </Box>
       ) : (
         <>
           {step === 1 && (
