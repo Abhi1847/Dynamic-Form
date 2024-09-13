@@ -23,6 +23,7 @@ function FormLayout() {
   const [textFieldData, setTextFieldData] = useState({});
   const [checkboxData, setCheckboxData] = useState([]);
   const [loading, setloading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,9 +77,24 @@ function FormLayout() {
     }));
   };
 
+  const validateFields = () => {
+    const newErrors = {};
+    fielddata.field?.forEach((data) => {
+      if (!textFieldData[data.fieldid] || textFieldData[data.fieldid].trim() === "") {
+        newErrors[data.fieldid] = true;
+      }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+
   const handleNext = () => {
-    saveStepData();
-    setstep((prevStep) => prevStep + 1);
+    if (validateFields()) {
+      saveStepData();
+      setstep((prevStep) => prevStep + 1);
+    } else {
+      console.log("Validation failed, cannot proceed.");
+    }
   };
 
   const handlePrevious = () => {
@@ -92,6 +108,7 @@ function FormLayout() {
       ...textFieldData,
       [fieldid]: e.target.value,
     });
+    setErrors({ ...errors, [fieldid]: false });
   };
 
   const handleCheckBoxChange = (e, option, id, fieldid) => {
@@ -136,9 +153,7 @@ function FormLayout() {
     loadStepData();
   }, []);
 
-  const validateField = (value) => {
-    return !value || value.trim() === ""; // Checks if the field is empty
-  };
+
 
   return (
     <>
@@ -203,9 +218,7 @@ function FormLayout() {
                   <Grid container justifyContent="space-between">
                     <Grid item xs={12} sm={4}>
                       {fielddata.field?.slice(0, 2).map((data) => {
-                        const hasError = validateField(
-                          textFieldData[data.fieldid]
-                        );
+                       const hasError = !!errors[data.fieldid];
                         return (
                           <TextField
                             fullWidth
@@ -227,9 +240,7 @@ function FormLayout() {
 
                     <Grid item xs={12} sm={4}>
                       {fielddata.field?.slice(2, 3).map((data) => {
-                        const hasError = validateField(
-                          textFieldData[data.fieldid]
-                        );
+                        const hasError = !!errors[data.fieldid];
                         return (
                           <TextField
                             fullWidth
@@ -248,9 +259,7 @@ function FormLayout() {
                         );
                       })}
                       {fielddata.field?.slice(10, 11).map((data) => {
-                        const hasError = validateField(
-                          textFieldData[data.fieldid]
-                        );
+                        const hasError = !!errors[data.fieldid];
                         return (
                           <TextField
                             fullWidth
