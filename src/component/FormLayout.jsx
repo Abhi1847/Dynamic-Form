@@ -136,6 +136,10 @@ function FormLayout() {
     loadStepData();
   }, []);
 
+  const validateField = (value) => {
+    return !value || value.trim() === ""; // Checks if the field is empty
+  };
+
   return (
     <>
       {loading ? (
@@ -198,43 +202,70 @@ function FormLayout() {
                 <Box mb={4}>
                   <Grid container justifyContent="space-between">
                     <Grid item xs={12} sm={4}>
-                      {fielddata.field?.slice(0, 2).map((data) => (
-                        <TextField
-                          fullWidth
-                          label={data.fieldtitle}
-                          variant="outlined"
-                          sx={{ mb: 2 }}
-                          value={textFieldData[data.fieldid] || ""}
-                          onChange={(e) =>
-                            handleTextfieldChange(e, data.fieldid)
-                          }
-                        />
-                      ))}
+                      {fielddata.field?.slice(0, 2).map((data) => {
+                        const hasError = validateField(
+                          textFieldData[data.fieldid]
+                        );
+                        return (
+                          <TextField
+                            fullWidth
+                            label={data.fieldtitle}
+                            variant="outlined"
+                            sx={{ mb: 2 }}
+                            value={textFieldData[data.fieldid] || ""}
+                            onChange={(e) =>
+                              handleTextfieldChange(e, data.fieldid)
+                            }
+                            error={hasError}
+                            helperText={
+                              hasError ? "This field is required" : ""
+                            }
+                          />
+                        );
+                      })}
                     </Grid>
 
                     <Grid item xs={12} sm={4}>
-                      {fielddata.field?.slice(2, 3).map((data) => (
-                        <TextField
-                          fullWidth
-                          label={data.fieldtitle}
-                          variant="outlined"
-                          sx={{ mb: 2 }}
-                          value={textFieldData[data.fieldid] || ""}
-                          onChange={(e) =>
-                            handleTextfieldChange(e, data.fieldid)
-                          }
-                        />
-                      ))}
-                      {fielddata.field?.slice(10, 11).map((data) => (
-                        <TextField
-                          fullWidth
-                          variant="outlined"
-                          value={textFieldData[data.fieldid] || ""}
-                          onChange={(e) =>
-                            handleTextfieldChange(e, data.fieldid)
-                          }
-                        />
-                      ))}
+                      {fielddata.field?.slice(2, 3).map((data) => {
+                        const hasError = validateField(
+                          textFieldData[data.fieldid]
+                        );
+                        return (
+                          <TextField
+                            fullWidth
+                            label={data.fieldtitle}
+                            variant="outlined"
+                            sx={{ mb: 2 }}
+                            value={textFieldData[data.fieldid] || ""}
+                            onChange={(e) =>
+                              handleTextfieldChange(e, data.fieldid)
+                            }
+                            error={hasError}
+                            helperText={
+                              hasError ? "This field is required" : ""
+                            }
+                          />
+                        );
+                      })}
+                      {fielddata.field?.slice(10, 11).map((data) => {
+                        const hasError = validateField(
+                          textFieldData[data.fieldid]
+                        );
+                        return (
+                          <TextField
+                            fullWidth
+                            variant="outlined"
+                            value={textFieldData[data.fieldid] || ""}
+                            onChange={(e) =>
+                              handleTextfieldChange(e, data.fieldid)
+                            }
+                            error={hasError}
+                            helperText={
+                              hasError ? "This field is required" : ""
+                            }
+                          />
+                        );
+                      })}
                     </Grid>
                   </Grid>
                 </Box>
