@@ -94,6 +94,7 @@ function FormLayout() {
   const handleNext = () => {
     if (validateFields()) {
       saveStepData();
+      console.log("vali");
       setstep((prevStep) => prevStep + 1);
     } else {
       console.log("Validation failed, cannot proceed.");
