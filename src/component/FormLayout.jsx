@@ -80,7 +80,10 @@ function FormLayout() {
   const validateFields = () => {
     const newErrors = {};
     fielddata.field?.forEach((data) => {
-      if (!textFieldData[data.fieldid] || textFieldData[data.fieldid].trim() === "") {
+      if (
+        !textFieldData[data.fieldid] ||
+        textFieldData[data.fieldid].trim() === ""
+      ) {
         newErrors[data.fieldid] = true;
       }
     });
@@ -153,8 +156,6 @@ function FormLayout() {
     loadStepData();
   }, []);
 
-
-
   return (
     <>
       {loading ? (
@@ -218,7 +219,7 @@ function FormLayout() {
                   <Grid container justifyContent="space-between">
                     <Grid item xs={12} sm={4}>
                       {fielddata.field?.slice(0, 2).map((data) => {
-                       const hasError = !!errors[data.fieldid];
+                        const hasError = !!errors[data.fieldid];
                         return (
                           <TextField
                             fullWidth
