@@ -3,7 +3,9 @@
   flex-direction: column;
 }
 html, body {
-  overflow: hidden;
+  overflow: scroll; /* Allow scrolling */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none;
 }
 
 .header {
