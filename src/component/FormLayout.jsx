@@ -79,7 +79,7 @@ function FormLayout() {
 
   const validateFields = () => {
     const newErrors = {};
-    fielddata.field?.forEach((data) => {
+    fielddata.field?.slice(0, 3).forEach((data) => {
       if (
         !textFieldData[data.fieldid] ||
         textFieldData[data.fieldid].trim() === ""
@@ -261,7 +261,7 @@ function FormLayout() {
                         );
                       })}
                       {fielddata.field?.slice(10, 11).map((data) => {
-                        const hasError = !!errors[data.fieldid];
+                        // const hasError = !!errors[data.fieldid];
                         return (
                           <TextField
                             fullWidth
@@ -270,10 +270,10 @@ function FormLayout() {
                             onChange={(e) =>
                               handleTextfieldChange(e, data.fieldid)
                             }
-                            error={hasError}
-                            helperText={
-                              hasError ? "This field is required" : ""
-                            }
+                            // error={hasError}
+                            // helperText={
+                            //   hasError ? "This field is required" : ""
+                            // }
                           />
                         );
                       })}
