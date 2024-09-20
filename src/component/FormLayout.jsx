@@ -38,8 +38,8 @@ function FormLayout() {
     const fetchData = async () => {
       try {
         setloading(true);
-        const formresponse = await axios.get("http://localhost:3000/form");
-        const fieldresponse = await axios.get("http://localhost:3000/field");
+        const formresponse = await axios.get("https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form");
+        const fieldresponse = await axios.get("https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field");
 
         setformdata(formresponse.data);
         setfielddata(fieldresponse.data);
