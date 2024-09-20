@@ -10,31 +10,36 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import avtar from "../assets/avtar.jpg";
+import Textarea from "@mui/joy/Textarea";
+import avtar from "../assets/countryofmarin.png";
 import axios from "axios";
+import "../assets/style.css";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 function FormLayout() {
   const [step, setstep] = useState(1);
   const [formdata, setformdata] = useState([]);
   const [fielddata, setfielddata] = useState([]);
   const [data, setdata] = useState();
+  const [groupList, setgroupList] = useState([]);
   const [checkdata, setcheckdata] = useState();
+  const [filteredData, setFilteredData] = useState([]);
   const [stepdata, setstepdata] = useState([]);
   const [textFieldData, setTextFieldData] = useState({});
   const [checkboxData, setCheckboxData] = useState([]);
   const [loading, setloading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setloading(true);
-        const formresponse = await axios.get(
-          "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form"
-        );
-        const fieldresponse = await axios.get(
-          " https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field"
-        );
+        const formresponse = await axios.get("http://localhost:3000/form");
+        const fieldresponse = await axios.get("http://localhost:3000/field");
 
         setformdata(formresponse.data);
         setfielddata(fieldresponse.data);
@@ -49,20 +54,17 @@ function FormLayout() {
   }, []);
 
   useEffect(() => {
-    if (fielddata?.field) {
-      const slicedData = fielddata.field.slice(3, 5);
-      const sortedData = slicedData.sort((a, b) => a.id - b.id);
-
-      setdata(sortedData);
+    if (fielddata?.data) {
+      const uniqueGroups = new Set();
+      fielddata.data.forEach((item) => {
+        if (item.grouptitle !== null) {
+          uniqueGroups.add(item.grouptitle);
+        }
+      });
+      const uniqueGroupsArray = Array.from(uniqueGroups);
+      setgroupList(uniqueGroupsArray);
     }
-  }, [fielddata]);
 
-  useEffect(() => {
-    if (fielddata?.field) {
-      const slicedData = fielddata.field.slice(9, 10);
-      // console.log("sliceddata...", slicedData);
-      setcheckdata(slicedData);
-    }
   }, [fielddata]);
 
   const saveStepData = () => {
@@ -88,14 +90,15 @@ function FormLayout() {
       }
     });
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0; 
   };
 
   const handleNext = () => {
     if (validateFields()) {
       saveStepData();
-      console.log("vali");
-      setstep((prevStep) => prevStep + 1);
+      if (currentGroupIndex < groupList.length - 1) {
+        setCurrentGroupIndex((prevIndex) => prevIndex + 1); 
+      }
     } else {
       console.log("Validation failed, cannot proceed.");
     }
@@ -103,7 +106,9 @@ function FormLayout() {
 
   const handlePrevious = () => {
     saveStepData();
-    setstep((prevStep) => prevStep - 1);
+    if (currentGroupIndex > 0) {
+      setCurrentGroupIndex((prevIndex) => prevIndex - 1); 
+    }
   };
 
   const handleTextfieldChange = (e, fieldid) => {
@@ -116,13 +121,17 @@ function FormLayout() {
   };
 
   const handleCheckBoxChange = (e, option, id, fieldid) => {
-    console.log("id...", fieldid);
     setCheckboxData((prevData) => {
       if (e.target.checked) {
         return [...prevData, { id, option, fieldid }];
       } else {
         return prevData.filter(
-          (item) => !(item.id === id && item.option === option)
+          (item) =>
+            !(
+              item.id === id &&
+              item.option === option &&
+              item.fieldid === fieldid
+            )
         );
       }
     });
@@ -134,12 +143,11 @@ function FormLayout() {
       checkboxes: checkboxData,
       formid: formdata.formid,
     };
-    const response = await axios.post(
-      "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-      formSubmissionData
-    );
-    console.log("Form data is:...", formSubmissionData);
-    console.log("response...", response);
+    // const response = await axios.post(
+    //   "http://localhost:3000/submit-form",
+    //   formSubmissionData
+    // );
+    console.log("response...", formSubmissionData);
   };
 
   useEffect(() => {
@@ -157,6 +165,136 @@ function FormLayout() {
     loadStepData();
   }, []);
 
+  useEffect(() => {
+    const filtered = checkboxData.filter((item) => item.option === "Other");
+    setFilteredData(filtered);
+  }, [checkboxData]);
+
+  const renderfield = (field) => {
+    const render = field.fieldtype;
+    switch (render) {
+      case "Date":
+        return (
+          <Grid item xs={12} sm={6} md={6}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker label={field.fieldtitle} sx={{ width: "70%" }} />
+            </LocalizationProvider>
+          </Grid>
+        );
+      case "TextField":
+        return (
+          <Grid item xs={12} sm={6} md={6}>
+            <TextField
+              fullWidth
+              label={field.fieldtitle}
+              variant="outlined"
+              sx={{ mb: 2, width: "70%" }}
+              value={textFieldData[field.fieldid] || ""}
+              onChange={(e) => handleTextfieldChange(e, field.fieldid)}
+            />
+          </Grid>
+        );
+      case "CheckboxGroup":
+        return (
+          <Box mb={2}>
+            <Typography variant="body1"> {field.fieldinfo}</Typography>
+            <Grid container mt={1}>
+              {field.fieldoptions?.options?.map((groupdata, idx) => (
+                // console.log("options===", groupdata)
+                <Grid item xs={12} sm={4} key={idx}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checkboxData.some(
+                          (data) =>
+                            data.id === field.groupid &&
+                            data.option === groupdata &&
+                            data.fieldid === field.fieldid
+                        )}
+                        onChange={(e) =>
+                          handleCheckBoxChange(
+                            e,
+                            groupdata,
+                            field.groupid,
+                            field.fieldid
+                          )
+                        }
+                      />
+                    }
+                    label={groupdata}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+            {filteredData.some((item) => item.fieldid === field.fieldid) && (
+              // if(filteredData.fieldid === field.fieldid ){
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                  value={textFieldData[field.fieldid] || ""}
+                  onChange={(e) => handleTextfieldChange(e, field.fieldid)}
+                  // disabled="true"
+                />
+              </Grid>
+            )}
+          </Box>
+        );
+      case "TextArea":
+        return (
+          <Grid container justifyContent="space-between" mb={2}>
+            <Typography variant="body1">{field.fieldinfo}</Typography>
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              // value={textFieldData[data.fieldid] || ""}
+              // onChange={(e) => handleTextfieldChange(e, data.fieldid)}
+            />
+          </Grid>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderFieldsWithGroup = () => {
+    // const renderedGroups = new Set();
+    const currentGroupTitle = groupList[currentGroupIndex];
+
+    // return fielddata?.data?.map((field) => {
+    //   const groupid = field.groupid;
+    //   const grouptitle = field.grouptitle;
+
+    return (
+      <Box>
+        <Typography
+          variant="h6"
+          gutterBottom
+          mt={2}
+          mb={2}
+          sx={{ fontWeight: "bold" }}
+        >
+          {currentGroupTitle}
+        </Typography>
+        {/* {renderGroupTitle(groupid, grouptitle, renderedGroups)}
+          {renderfield(field)} */}
+        <Grid container>
+          {/* Render fields based on the current group */}
+
+          {fielddata?.data
+            ?.filter((field) => field.grouptitle === currentGroupTitle)
+            .map((field) => (
+              <Grid item xs={12} key={field.fieldid}>
+                {renderfield(field)}
+              </Grid>
+            ))}
+        </Grid>
+      </Box>
+    );
+  };
   return (
     <>
       {loading ? (
@@ -174,266 +312,45 @@ function FormLayout() {
             elevation={3}
             sx={{ padding: 4, maxWidth: "800px", margin: "0 auto" }}
           >
-            {step === 1 && (
-              <>
-                <Box mb={4} alignItems="center">
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={3}>
-                      <Box
-                        component="img"
-                        src={avtar}
-                        alt="Department Logo"
-                        sx={{ width: "100%", height: "auto" }}
-                      />
-                    </Grid>
+            <div
+              dangerouslySetInnerHTML={{ __html: formdata.formdescription }}
+            />
+            <Box display="flex" flexDirection="row" flexWrap="wrap">
+              <Grid
+                container
+                spacing={2}
+                sx={{ justifyContent: "space-between" }}
+              >
+                {fielddata?.data
+                  ?.filter((field) => field.grouptitle === null)
+                  .map((field) => renderfield(field))}
+              </Grid>
+            </Box>
 
-                    <Grid item xs={12} sm={9}>
-                      <Typography variant="h6" align="center">
-                        {formdata.formdescription?.description[0]}
-                      </Typography>
-                      <Typography variant="subtitle1" align="center">
-                        {formdata.formdescription?.description[1]}
-                      </Typography>
-                      <Typography variant="subtitle2" align="center">
-                        {formdata.formdescription?.description[2]}
-                      </Typography>
-                      <Typography variant="body2" align="center">
-                        {formdata.formdescription?.description[3]}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                  <Typography variant="h5" mt={2} align="center">
-                    {formdata.formtitle}
-                  </Typography>
-                  <Typography variant="body1" align="center">
-                    {formdata.formdescription?.description[4]}
-                  </Typography>
-                  <Typography variant="subtitle2" mt={2}>
-                    {formdata.formdescription?.description[5]}
-                  </Typography>
-                  <Typography variant="subtitle2" mt={2}>
-                    {formdata.formdescription?.description[6]}
-                  </Typography>
-                </Box>
+            {renderFieldsWithGroup()}
 
-                <Box mb={4}>
-                  <Grid container justifyContent="space-between">
-                    <Grid item xs={12} sm={4}>
-                      {fielddata.field?.slice(0, 2).map((data) => {
-                        const hasError = !!errors[data.fieldid];
-                        return (
-                          <TextField
-                            fullWidth
-                            label={data.fieldtitle}
-                            variant="outlined"
-                            sx={{ mb: 2 }}
-                            value={textFieldData[data.fieldid] || ""}
-                            onChange={(e) =>
-                              handleTextfieldChange(e, data.fieldid)
-                            }
-                            error={hasError}
-                            helperText={
-                              hasError ? "This field is required" : ""
-                            }
-                          />
-                        );
-                      })}
-                    </Grid>
-
-                    <Grid item xs={12} sm={4}>
-                      {fielddata.field?.slice(2, 3).map((data) => {
-                        const hasError = !!errors[data.fieldid];
-                        return (
-                          <TextField
-                            fullWidth
-                            label={data.fieldtitle}
-                            variant="outlined"
-                            sx={{ mb: 2 }}
-                            value={textFieldData[data.fieldid] || ""}
-                            onChange={(e) =>
-                              handleTextfieldChange(e, data.fieldid)
-                            }
-                            error={hasError}
-                            helperText={
-                              hasError ? "This field is required" : ""
-                            }
-                          />
-                        );
-                      })}
-                      {fielddata.field?.slice(10, 11).map((data) => {
-                        // const hasError = !!errors[data.fieldid];
-                        return (
-                          <TextField
-                            fullWidth
-                            variant="outlined"
-                            value={textFieldData[data.fieldid] || ""}
-                            onChange={(e) =>
-                              handleTextfieldChange(e, data.fieldid)
-                            }
-                            // error={hasError}
-                            // helperText={
-                            //   hasError ? "This field is required" : ""
-                            // }
-                          />
-                        );
-                      })}
-                    </Grid>
-                  </Grid>
-                </Box>
-
-                <Box mb={4} mt={4}>
-                  {fielddata.group?.slice(0, 1).map((data) => (
-                    <Typography variant="h6" key={data.groupid}>
-                      {data.grouptitle}
-                    </Typography>
-                  ))}
-                  {data?.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <Typography variant="body1"> {item.fieldinfo}</Typography>
-                      <Grid container mt={1}>
-                        {item.fieldoptions?.options?.map((groupdata, idx) => (
-                          <Grid item xs={12} sm={4} key={idx}>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={checkboxData.some(
-                                    (data) =>
-                                      data.id === item.groupid &&
-                                      data.option === groupdata
-                                  )}
-                                  onChange={(e) =>
-                                    handleCheckBoxChange(
-                                      e,
-                                      groupdata,
-                                      item.groupid,
-                                      item.fieldid
-                                    )
-                                  }
-                                />
-                              }
-                              label={groupdata}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </React.Fragment>
-                  ))}
-                </Box>
-
-                <Box mb={4}>
-                  {fielddata.field?.slice(5, 7).map((data) => (
-                    <>
-                      <Typography variant="body1" key={data.fieldid}>
-                        {data.fieldinfo}
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        value={textFieldData[data.fieldid] || ""}
-                        onChange={(e) => handleTextfieldChange(e, data.fieldid)}
-                      />
-                    </>
-                  ))}
-                </Box>
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <Box mb={4}>
-                  {fielddata.group?.slice(1, 2).map((data) => (
-                    <Typography variant="h6" key={data.groupid}>
-                      {data.grouptitle}
-                    </Typography>
-                  ))}
-                  {checkdata.map((item, index) => (
-                    <React.Fragment>
-                      <Typography variant="body1" key={index}>
-                        {item.fieldinfo}
-                      </Typography>
-
-                      <Grid container>
-                        {item.fieldoptions?.options?.map((option, idx) => (
-                          <Grid item xs={12} sm={4} md={4} key={idx}>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={checkboxData.some(
-                                    (data) =>
-                                      data.id === item.groupid &&
-                                      data.option === option
-                                  )}
-                                  onChange={(e) =>
-                                    handleCheckBoxChange(
-                                      e,
-                                      option,
-                                      item.groupid,
-                                      item.fieldid
-                                    )
-                                  }
-                                />
-                              }
-                              label={option}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={1}
-                        value={textFieldData[item.fieldid] || ""}
-                        onChange={(e) => handleTextfieldChange(e, item.fieldid)}
-                      />
-                    </React.Fragment>
-                  ))}
-                </Box>
-
-                <Box mb={4}>
-                  {fielddata?.field.slice(7, 9).map((data) => (
-                    <>
-                      <Typography variant="body1" key={data.fieldid}>
-                        {data.fieldinfo}
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        value={textFieldData[data.fieldid] || ""}
-                        onChange={(e) => handleTextfieldChange(e, data.fieldid)}
-                      />
-                    </>
-                  ))}
-                </Box>
-              </>
-            )}
-
-            <Box mb={4}>
-              <Grid container justifyContent="space-between">
-                <Grid item xs={12} sm={1}>
+            <Grid
+              container
+              justifyContent={
+                currentGroupIndex === groupList.length - 1
+                  ? "space-between"
+                  : "flex-end"
+              }
+            >
+              {currentGroupIndex > 0 && (
+                <Grid item>
                   <Button
                     variant="contained"
                     size="large"
                     onClick={handlePrevious}
-                    disabled={step === 1}
                   >
                     Previous
                   </Button>
                 </Grid>
-                <Grid item xs={12} sm={1}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleNext}
-                    disabled={step === 2}
-                  >
-                    Next
-                  </Button>
-                </Grid>
-              </Grid>
-              {step === 2 && (
-                <Grid item xs={12} sm={4} align="center" mt={5}>
+              )}
+
+              <Grid item>
+                {currentGroupIndex === groupList.length - 1 ? (
                   <Button
                     variant="contained"
                     size="large"
@@ -441,9 +358,13 @@ function FormLayout() {
                   >
                     Submit
                   </Button>
-                </Grid>
-              )}
-            </Box>
+                ) : (
+                  <Button variant="contained" size="large" onClick={handleNext}>
+                    Next
+                  </Button>
+                )}
+              </Grid>
+            </Grid>
           </Paper>
         </>
       )}
