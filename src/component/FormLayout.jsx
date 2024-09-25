@@ -231,10 +231,10 @@ function FormLayout() {
       textAreaValue: textAreaValue,
       otheroption: option,
     };
-    // const response = await axios.post(
-    //   "http://localhost:8000/submit-form",
-    //   formSubmissionData
-    // );
+    const response = await axios.post(
+      "http://localhost:8000/submit-form",
+      formSubmissionData
+    );
     console.log("response...", formSubmissionData);
     setTextFieldData({});
     setCheckboxData([]);
