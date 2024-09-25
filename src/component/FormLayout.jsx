@@ -39,7 +39,7 @@ function FormLayout() {
   const [textAreaValue, setTextAreaValue] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [option, setoption] = useState("");
-  console.log("parameter", Name);
+
   //form useeffect
   useEffect(() => {
     const fetchData = async () => {
@@ -47,12 +47,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
-          // `http://localhost:8000/form/${Name}`,
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
+          `http://localhost:8000/form/${Name}`
         );
         const fieldresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
-          // `http://localhost:8000/field/${Name}`,
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
+          `http://localhost:8000/field/${Name}`
         );
 
         setformdata(formresponse.data);
@@ -106,42 +106,88 @@ function FormLayout() {
     }));
   };
 
+  // const validateFields = () => {
+  //   console.log("validation is true");
+  // };
   const validateFields = () => {
-    const newErrors = {};
+    let isValid = true; // Flag to track validation status
+    const newErrors = {}; // Object to store errors
 
-    fielddata.field?.forEach((data) => {
-      console.log(
-        "validate...",
-        data.isrequire,
-        !textFieldData[data.fieldid] ||
-          textFieldData[data.fieldid].trim() === ""
-      );
-      if (
-        data.isrequire &&
-        (!textFieldData[data.fieldid] ||
-          textFieldData[data.fieldid].trim() === "")
-      ) {
-        newErrors[data.fieldid] = `${data.fieldinfo} is required`;
-      }
-    });
+    // Get the current group title
+    const currentGroupTitle = groupList[currentGroupIndex];
 
-    fielddata.field?.forEach((data) => {
-      if (data.fieldtype === "CheckboxGroup" && data.isRequired) {
-        const checkboxEntry = checkboxData.find(
-          (item) => item.fieldid === data.fieldid
-        );
-        if (
-          !checkboxEntry ||
-          (checkboxEntry.options && checkboxEntry.options.length === 0)
-        ) {
-          newErrors[
-            data.fieldid
-          ] = `${data.fieldtitle} requires at least one selection`;
+    // Filter the fields that belong to the current group
+    const currentGroupFields = fielddata?.data?.filter(
+      (field) =>
+        field.grouptitle === currentGroupTitle || field.grouptitle === null
+    );
+
+    // Validate required TextFields
+    currentGroupFields
+      ?.filter((field) => field.fieldtype === "TextField" && field.isrequired)
+      .forEach((field) => {
+        const fieldValue = textFieldData[field.fieldid] || "";
+        if (!fieldValue.trim()) {
+          isValid = false;
+          newErrors[field.fieldid] = (
+            <Typography variant="body2" color="error">
+              {field.fieldtitle} field is required
+            </Typography>
+          );
         }
-      }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+      });
+
+    // Validate required Checkboxes
+    currentGroupFields
+      ?.filter(
+        (field) => field.fieldtype === "CheckboxGroup" && field.isrequired
+      )
+      .forEach((field) => {
+        const isChecked = checkboxData.some(
+          (data) => data.id === field.groupid && data.fieldid === field.fieldid
+        );
+        if (!isChecked) {
+          isValid = false;
+          newErrors[field.fieldid] = (
+            <Typography variant="body2" color="error">
+              Please select at least one option
+            </Typography>
+          );
+        }
+      });
+
+    // Validate required Dates
+    currentGroupFields
+      ?.filter((field) => field.fieldtype === "Date" && field.isrequired)
+      .forEach((field) => {
+        const selectedDateValue =
+          date.id === field.fieldid ? date.formattedDate : null;
+        if (!selectedDateValue) {
+          isValid = false;
+          newErrors[field.fieldid] = (
+            <Typography variant="body2" color="error">
+              Please select a date
+            </Typography>
+          );
+          //  "Please select a date";
+        }
+      });
+
+    // Validate required TextAreas
+    currentGroupFields
+      ?.filter((field) => field.fieldtype === "TextArea" && field.isrequired)
+      .forEach((field) => {
+        const textAreaContent =
+          textAreaValue[field.groupid]?.[field.fieldid]?.value || "";
+        if (!textAreaContent.trim()) {
+          isValid = false;
+          newErrors[field.fieldid] = "This field cannot be empty";
+        }
+      });
+
+    setErrors(newErrors); // Update errors state
+
+    return isValid; // Return validation status
   };
 
   //handle next button function
@@ -231,18 +277,23 @@ function FormLayout() {
       textAreaValue: textAreaValue,
       otheroption: option,
     };
-    const response = await axios.post(
-      "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-      // "http://localhost:8000/submit-form",
-      formSubmissionData
-    );
-    console.log("response...", formSubmissionData);
-    setTextFieldData({});
-    setCheckboxData([]);
-    setoption("");
-    setdate({});
-    setTextAreaValue({});
-    setSelectedDate(null);
+    if (validateFields()) {
+      console.log("validate");
+      // const response = await axios.post(
+      //   // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+      //   "http://localhost:8000/submit-form",
+      //   formSubmissionData
+      // );
+      console.log("response...", formSubmissionData);
+      setTextFieldData({});
+      setCheckboxData([]);
+      setoption("");
+      setdate({});
+      setTextAreaValue({});
+      setSelectedDate(null);
+    } else {
+      console.log("Validation failed, cannot proceed.");
+    }
   };
 
   //save step data in textfield and checkbox
@@ -306,6 +357,15 @@ function FormLayout() {
                   handleDateChange(newValue, field.fieldid)
                 }
                 sx={{ width: "70%" }}
+                slots={{
+                  textField: (params) => (
+                    <TextField
+                      {...params}
+                      error={Boolean(errors[field.fieldid])} // Show error if validation fails
+                      helperText={errors[field.fieldid]} // Display the error message
+                    />
+                  ),
+                }}
               />
             </LocalizationProvider>
           </Grid>
@@ -320,6 +380,8 @@ function FormLayout() {
               sx={{ mb: 2, width: "70%" }}
               value={textFieldData[field.fieldid] || ""}
               onChange={(e) => handleTextfieldChange(e, field.fieldid)}
+              error={Boolean(errors[field.fieldid])}
+              helperText={errors[field.fieldid]}
             />
           </Grid>
         );
@@ -354,6 +416,11 @@ function FormLayout() {
                 </Grid>
               ))}
             </Grid>
+            {errors[field.fieldid] && (
+              <Typography variant="body2" color="error">
+                {errors[field.fieldid]}
+              </Typography>
+            )}
             {filteredData.some((item) => item.fieldid === field.fieldid) && (
               <Grid item xs={12}>
                 <TextField
@@ -364,6 +431,8 @@ function FormLayout() {
                   onChange={(e) =>
                     handleoptionChange(e, field.fieldid, field.groupid)
                   }
+                  error={Boolean(errors[field.fieldid])}
+                  helperText={errors[field.fieldid]}
                 />
               </Grid>
             )}
@@ -378,14 +447,22 @@ function FormLayout() {
               name="Outlined"
               placeholder=""
               variant="outlined"
-              sx={{ width: "100%" }}
-              // maxRows={4}
+              sx={{
+                width: "100%",
+                borderColor: errors[field.fieldid] ? "red" : "", // Change border color if error
+              }}
               value={textAreaValue[field.groupid]?.[field.fieldid]?.value || ""}
               rows={4}
               onChange={(e) =>
                 handleTextAreaChange(e, field.fieldid, field.groupid)
               }
             />
+
+            {errors[field.fieldid] && (
+              <Typography variant="body2" color="error">
+                {errors[field.fieldid]}
+              </Typography>
+            )}
           </Grid>
         );
       default:
