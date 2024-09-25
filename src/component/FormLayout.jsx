@@ -148,6 +148,27 @@ function FormLayout() {
               Please select at least one option
             </Typography>
           );
+        } else {
+          const otherOptionSelected = checkboxData.some(
+            (item) =>
+              item.id === field.groupid &&
+              item.fieldid === field.fieldid &&
+              item.options?.includes("Other")
+          );
+
+          if (otherOptionSelected) {
+            // Get the "Other" text input value from 'option' state
+            const otherText = option[field.fieldid]?.options;
+
+            if (!otherText || otherText.trim() === "") {
+              isValid = false;
+              newErrors[field.fieldid] = (
+                <Typography variant="body2" color="error">
+                  Please enter a value for "Other"
+                </Typography>
+              );
+            }
+          }
         }
       });
 
@@ -411,11 +432,7 @@ function FormLayout() {
                 </Grid>
               ))}
             </Grid>
-            {errors[field.fieldid] && (
-              <Typography variant="body2" color="error">
-                {errors[field.fieldid]}
-              </Typography>
-            )}
+
             {filteredData.some((item) => item.fieldid === field.fieldid) && (
               <Grid item xs={12}>
                 <TextField
@@ -426,10 +443,13 @@ function FormLayout() {
                   onChange={(e) =>
                     handleoptionChange(e, field.fieldid, field.groupid)
                   }
-                  error={Boolean(errors[field.fieldid])}
-                  helperText={errors[field.fieldid]}
                 />
               </Grid>
+            )}
+            {errors[field.fieldid] && (
+              <Typography variant="body2" color="error">
+                {errors[field.fieldid]}
+              </Typography>
             )}
           </Box>
         );
