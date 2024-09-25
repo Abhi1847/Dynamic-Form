@@ -39,7 +39,6 @@ function FormLayout() {
   const [textAreaValue, setTextAreaValue] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [option, setoption] = useState("");
-
   //form useeffect
   useEffect(() => {
     const fetchData = async () => {
@@ -47,12 +46,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
-          // `http://localhost:8000/form/${Name}`
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
+          `http://localhost:8000/form/${Name}`
         );
         const fieldresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
-          // `http://localhost:8000/field/${Name}`
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
+          `http://localhost:8000/field/${Name}`
         );
 
         setformdata(formresponse.data);
@@ -106,17 +105,13 @@ function FormLayout() {
     }));
   };
 
-  // const validateFields = () => {
-  //   console.log("validation is true");
-  // };
+  //Validation code
   const validateFields = () => {
-    let isValid = true; // Flag to track validation status
-    const newErrors = {}; // Object to store errors
+    let isValid = true;
+    const newErrors = {};
 
-    // Get the current group title
     const currentGroupTitle = groupList[currentGroupIndex];
 
-    // Filter the fields that belong to the current group
     const currentGroupFields = fielddata?.data?.filter(
       (field) =>
         field.grouptitle === currentGroupTitle || field.grouptitle === null
@@ -280,8 +275,8 @@ function FormLayout() {
     if (validateFields()) {
       console.log("validate");
       const response = await axios.post(
-        "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-        // "http://localhost:8000/submit-form",
+        // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+        "http://localhost:8000/submit-form",
         formSubmissionData
       );
       console.log("response...", formSubmissionData);
@@ -452,7 +447,7 @@ function FormLayout() {
                 borderColor: errors[field.fieldid] ? "red" : "", // Change border color if error
               }}
               value={textAreaValue[field.groupid]?.[field.fieldid]?.value || ""}
-              maxRowss={4}
+              maxRows={4}
               onChange={(e) =>
                 handleTextAreaChange(e, field.fieldid, field.groupid)
               }
