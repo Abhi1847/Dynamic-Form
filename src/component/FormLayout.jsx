@@ -47,22 +47,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`,
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
           // `http://localhost:8000/form/${Name}`,
-          {
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          }
         );
         const fieldresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`,
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
           // `http://localhost:8000/field/${Name}`,
-          {
-            headers: {
-              "Cache-Control": "no-cache",
-            },
-          }
         );
 
         setformdata(formresponse.data);
