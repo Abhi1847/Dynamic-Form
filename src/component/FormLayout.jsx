@@ -452,7 +452,7 @@ function FormLayout() {
                 borderColor: errors[field.fieldid] ? "red" : "", // Change border color if error
               }}
               value={textAreaValue[field.groupid]?.[field.fieldid]?.value || ""}
-              rows={4}
+              maxRowss={4}
               onChange={(e) =>
                 handleTextAreaChange(e, field.fieldid, field.groupid)
               }
