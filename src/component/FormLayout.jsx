@@ -232,7 +232,8 @@ function FormLayout() {
       otheroption: option,
     };
     const response = await axios.post(
-      "http://localhost:8000/submit-form",
+      "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+      // "http://localhost:8000/submit-form",
       formSubmissionData
     );
     console.log("response...", formSubmissionData);
