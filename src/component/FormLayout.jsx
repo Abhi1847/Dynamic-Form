@@ -39,6 +39,7 @@ function FormLayout() {
   const [textAreaValue, setTextAreaValue] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [option, setoption] = useState("");
+
   //form useeffect
   useEffect(() => {
     const fetchData = async () => {
@@ -300,7 +301,7 @@ function FormLayout() {
         // "http://localhost:8000/submit-form",
         formSubmissionData
       );
-      console.log("response...", formSubmissionData);
+      // console.log("response...", formSubmissionData);
       setTextFieldData({});
       setCheckboxData([]);
       setoption("");
@@ -384,6 +385,19 @@ function FormLayout() {
                 }}
               />
             </LocalizationProvider>
+            {field.isrequired ? (
+              <span
+                style={{
+                  color: "red",
+                  marginLeft: "10px",
+                  fontSize: "1.5em",
+                }}
+              >
+                *
+              </span>
+            ) : (
+              ""
+            )}
           </Grid>
         );
       case "TextField":
@@ -399,12 +413,41 @@ function FormLayout() {
               error={Boolean(errors[field.fieldid])}
               helperText={errors[field.fieldid]}
             />
+            {field.isrequired ? (
+              <span
+                style={{
+                  color: "red",
+                  marginLeft: "10px",
+                  fontSize: "1.5em",
+                }}
+              >
+                *
+              </span>
+            ) : (
+              ""
+            )}
           </Grid>
         );
       case "CheckboxGroup":
         return (
           <Box mb={2}>
-            <Typography variant="body1"> {field.fieldinfo}</Typography>
+            <Typography variant="body1">
+              {" "}
+              {field.fieldinfo}
+              {field.isrequired ? (
+                <span
+                  style={{
+                    color: "red",
+                    marginLeft: "10px",
+                    fontSize: "1.5em",
+                  }}
+                >
+                  *
+                </span>
+              ) : (
+                ""
+              )}
+            </Typography>
             <Grid container mt={1}>
               {field.fieldoptions?.options?.map((groupdata, idx) => (
                 <Grid item xs={12} sm={4} key={idx}>
@@ -456,7 +499,22 @@ function FormLayout() {
       case "TextArea":
         return (
           <Grid container justifyContent="space-between" mb={2}>
-            <Typography variant="body1">{field.fieldinfo}</Typography>
+            <Typography variant="body1">
+              {field.fieldinfo}
+              {field.isrequired ? (
+                <span
+                  style={{
+                    color: "red",
+                    marginLeft: "10px",
+                    fontSize: "1.5em",
+                  }}
+                >
+                  *
+                </span>
+              ) : (
+                ""
+              )}
+            </Typography>
 
             <Textarea
               name="Outlined"
