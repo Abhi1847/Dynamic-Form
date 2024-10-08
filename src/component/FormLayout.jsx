@@ -11,15 +11,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Textarea from "@mui/joy/Textarea";
-import avtar from "../assets/countryofmarin.png";
 import axios from "axios";
 import "../assets/style.css";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import jspdf from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function FormLayout() {
   const [step, setstep] = useState(1);
@@ -27,7 +29,7 @@ function FormLayout() {
   const [fielddata, setfielddata] = useState([]);
   const [date, setdate] = useState({});
   const [groupList, setgroupList] = useState([]);
-  // const [checkdata, setcheckdata] = useState();
+  const [groupListid, setgroupListid] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [stepdata, setstepdata] = useState([]);
   const [textFieldData, setTextFieldData] = useState({});
@@ -36,11 +38,13 @@ function FormLayout() {
   const [errors, setErrors] = useState({});
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const { Name } = useParams();
-  const [textAreaValue, setTextAreaValue] = useState({});
+  const [textAreaValue, setTextAreaValue] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
-  const [option, setoption] = useState("");
+  const [option, setoption] = useState([]);
+  const [submitdata, setsubmitdata] = useState([]);
+  const [loadingOverlay, setLoadingOverlay] = useState(false);
 
-  //form useeffect
+  //formdata useeffect
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -89,7 +93,28 @@ function FormLayout() {
         }
       });
       const uniqueGroupsArray = Array.from(uniqueGroups);
+
       setgroupList(uniqueGroupsArray);
+    }
+  }, [fielddata]);
+
+  useEffect(() => {
+    if (fielddata?.data) {
+      const uniqueGroups = new Map();
+      fielddata.data.forEach((item) => {
+        if (item.grouptitle !== null) {
+          uniqueGroups.set(item.groupid, item.grouptitle); 
+        }
+      });
+      const uniqueGroupsArray = Array.from(
+        uniqueGroups,
+        ([groupid, grouptitle]) => ({
+          groupid,
+          grouptitle,
+        })
+      );
+
+      setgroupListid(uniqueGroupsArray);
     }
   }, [fielddata]);
 
@@ -98,12 +123,11 @@ function FormLayout() {
     const currentStepData = {
       textFields: textFieldData,
       checkboxes: checkboxData,
+      date: date,
+      textarea: textAreaValue,
     };
 
-    setstepdata((prevData) => ({
-      ...prevData,
-      [step]: currentStepData,
-    }));
+    setstepdata(currentStepData);
   };
 
   //Validation code
@@ -122,7 +146,7 @@ function FormLayout() {
     currentGroupFields
       ?.filter((field) => field.fieldtype === "TextField" && field.isrequired)
       .forEach((field) => {
-        const fieldValue = textFieldData[field.fieldid] || "";
+        const fieldValue = textFieldData[field.fieldid]?.value || "";
         if (!fieldValue.trim()) {
           isValid = false;
           newErrors[field.fieldid] = (
@@ -157,9 +181,11 @@ function FormLayout() {
               item.options?.includes("Other")
           );
 
+          
           if (otherOptionSelected) {
-            // Get the "Other" text input value from 'option' state
-            const otherText = option[field.fieldid]?.options;
+            const otherText = option.find(
+              (item) => item.id === field.fieldid
+            )?.options;
 
             if (!otherText || otherText.trim() === "") {
               isValid = false;
@@ -186,7 +212,6 @@ function FormLayout() {
               Please select a date
             </Typography>
           );
-          //  "Please select a date";
         }
       });
 
@@ -202,13 +227,13 @@ function FormLayout() {
         }
       });
 
-    setErrors(newErrors); // Update errors state
+    setErrors(newErrors); 
 
-    return isValid; // Return validation status
+    return isValid; 
   };
 
   //handle next button function
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateFields()) {
       saveStepData();
       if (currentGroupIndex < groupList.length - 1) {
@@ -228,16 +253,18 @@ function FormLayout() {
   };
 
   //handle textfield change function
-  const handleTextfieldChange = (e, fieldid) => {
+  const handleTextfieldChange = (e, fieldid, name) => {
     setTextFieldData({
       ...textFieldData,
-      [fieldid]: e.target.value,
+      [fieldid]: {
+        value: e.target.value,
+        name: name,
+      },
     });
     setErrors({ ...errors, [fieldid]: false });
   };
-
   //handle checkbox change function
-  const handleCheckBoxChange = (e, option, id, fieldid) => {
+  const handleCheckBoxChange = (e, option, id, fieldid, fieldname) => {
     setCheckboxData((prevData) => {
       if (e.target.checked) {
         const existingEntry = prevData.find(
@@ -251,7 +278,7 @@ function FormLayout() {
               : item
           );
         } else {
-          return [...prevData, { id, fieldid, options: [option] }];
+          return [...prevData, { id, fieldid, options: [option], fieldname }];
         }
       } else {
         return prevData
@@ -272,45 +299,341 @@ function FormLayout() {
   };
 
   //handle textarea change function
-  const handleTextAreaChange = (e, id, groupid) => {
+  const handleTextAreaChange = (e, id, groupid, fieldname) => {
     const newValue = e.target.value;
 
     setTextAreaValue((prevState) => ({
       ...prevState,
       [groupid]: {
         ...prevState[groupid],
-        [id]: { groupid, id, value: newValue },
+        [id]: { groupid, id, value: newValue, fieldname },
       },
     }));
   };
 
-  //handle form submit function
+  // const handledemo = (formSubmissionData) => {
+  //   return new Promise((resolve, reject) => {
+  //     let yPosition = 10;
+  //     const parser = new DOMParser();
+  //     const docu = parser.parseFromString(
+  //       formdata.formdescription,
+  //       "text/html"
+  //     );
+  //     const imgTag = docu.querySelector("img");
+
+  //     if (imgTag) {
+  //       const imgURL = imgTag.src;
+  //       const doc = new jspdf("p", "mm", "a4");
+  //       const componentwidth = doc.internal.pageSize.getWidth();
+  //       const componentheight = doc.internal.pageSize.getHeight();
+
+  //       const image = new Image();
+  //       image.src = imgURL;
+  //       image.onload = function () {
+  //         const imgWidth = 40;
+  //         const imgHeight = (image.height / image.width) * imgWidth;
+
+  //         doc.addImage(image, "JPEG", 10, yPosition, imgWidth, imgHeight);
+  //         const textContent = docu.body.textContent || "";
+  //         const pageWidth = componentwidth - 10;
+
+  //         const fontSize = 12;
+  //         doc.setFontSize(fontSize);
+
+  //         const splitText = doc.splitTextToSize(textContent, pageWidth);
+
+  //         splitText.forEach((line) => {
+  //           if (yPosition > componentheight - 10) {
+  //             doc.addPage();
+  //             yPosition = 10;
+  //           }
+  //           doc.text(line, 10, yPosition);
+  //           yPosition += 5;
+  //         });
+  //         const tableData = [];
+  //         yPosition = 180;
+  //         Object.entries(formSubmissionData).forEach((data) => {
+  //           if (yPosition > componentheight - 10) {
+  //             doc.addPage();
+  //             yPosition = 10;
+  //           }
+
+  //           if (data[0] === "textFields") {
+  //             Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
+  //               tableData.push([fieldData.name, fieldData.value]);
+  //             });
+  //           }
+
+  //           if (data[0] === "Date") {
+  //             const { fieldname, formattedDate } = data[1];
+  //             tableData.push([fieldname, formattedDate]);
+  //           }
+  //         });
+
+  //         groupListid.forEach((id) => {
+  //           Object.entries(formSubmissionData).forEach((data) => {
+  //             if (data[0] === "checkboxes" || data[0] === "otheroption") {
+  //               data[1].forEach((checkbox) => {
+  //                 if (checkbox.id === id.groupid) {
+  //                   tableData.push([
+  //                     checkbox.fieldname,
+  //                     checkbox.options.join(" , "),
+  //                   ]);
+  //                 }
+  //               });
+  //             }
+
+  //             if (data[0] === "textAreaValue") {
+  //               Object.entries(data[1]).forEach(([outerKey, innerFields]) => {
+  //                 Object.entries(innerFields).forEach(
+  //                   ([innerKey, fieldData]) => {
+  //                     if (fieldData.groupid === id.groupid) {
+  //                       tableData.push([fieldData.fieldname, fieldData.value]);
+  //                     }
+  //                   }
+  //                 );
+  //               });
+  //             }
+  //           });
+  //         });
+
+  //         Object.entries(formSubmissionData).forEach((data) => {
+  //           if (data[0] === "otheroption") {
+  //             Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
+  //               tableData.push([fieldData.fieldname, fieldData.options]);
+  //             });
+  //           }
+  //         });
+
+  //         autoTable(doc, {
+  //           head: [["Question", "Answer"]],
+  //           body: tableData,
+  //           startY: 180,
+  //           styles: { overflow: "linebreak", fontSize: 12 },
+  //           columnStyles: {
+  //             0: { cellWidth: "auto" },
+  //             1: { cellWidth: "auto" },
+  //           },
+  //         });
+
+  //         const pdfBlob = doc.output("blob");
+  //         resolve(pdfBlob);
+  //       };
+
+  //       image.onerror = () => {
+  //         reject("Failed to load the image.");
+  //       };
+  //     } else {
+  //       reject("No image found in the HTML content.");
+  //     }
+  //   });
+  // };
+
+  const handlepdf = (formSubmissionData) => {
+    return new Promise((resolve, reject) => {
+      let yPosition = 10;
+      const parser = new DOMParser();
+      const docu = parser.parseFromString(
+        formdata.formdescription,
+        "text/html"
+      );
+      const imgTag = docu.querySelector("img");
+
+      if (imgTag) {
+        const imgURL = imgTag.src;
+        const doc = new jspdf("p", "mm", "a4");
+        const componentwidth = doc.internal.pageSize.getWidth();
+        const componentheight = doc.internal.pageSize.getHeight();
+
+        const image = new Image();
+        image.src = imgURL;
+        image.onload = function () {
+          const imgWidth = 40;
+          const imgHeight = (image.height / image.width) * imgWidth;
+
+          doc.addImage(image, "JPEG", 10, yPosition, imgWidth, imgHeight);
+          const textContent = docu.body.textContent || "";
+          const pageWidth = componentwidth - 10;
+
+          const fontSize = 12;
+          doc.setFontSize(fontSize);
+
+          const splitText = doc.splitTextToSize(textContent, pageWidth);
+
+          splitText.forEach((line) => {
+            if (yPosition > componentheight - 10) {
+              doc.addPage();
+              yPosition = 10;
+            }
+            doc.text(line, 10, yPosition);
+            yPosition += 5;
+          });
+
+          const tableData = [];
+          yPosition = 170;
+
+          Object.entries(formSubmissionData).forEach((data) => {
+            if (yPosition > componentheight - 10) {
+              doc.addPage();
+              yPosition = 10;
+            }
+
+            if (data[0] === "textFields") {
+              Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
+                tableData.push([fieldData.name, fieldData.value]);
+              });
+            }
+
+            if (data[0] === "Date") {
+              const { fieldname, formattedDate } = data[1];
+              tableData.push([fieldname, formattedDate]);
+            }
+          });
+
+          groupListid.forEach((id) => {
+            Object.entries(formSubmissionData).forEach((data) => {
+              
+              if (data[0] === "checkboxes" || data[0] === "otheroption") {
+                data[1].forEach((checkbox) => {
+                  if (checkbox.id === id.groupid) {
+                    const otherOptions = [];
+
+                    const otherData =
+                      Object.entries(formSubmissionData.otheroption) || [];
+
+                    otherData.forEach(([key, value]) => {
+                      if (
+                        value.groupid === id.groupid &&
+                        value.id === checkbox.fieldid
+                      ) {
+                        otherOptions.push(value.options);
+                      }
+                    });
+
+                    const combinedOptions = [
+                      ...checkbox.options,
+                      ...otherOptions,
+                    ].join(", ");
+
+                    tableData.push([checkbox.fieldname, combinedOptions]);
+                  }
+                });
+              }
+
+              if (data[0] === "textAreaValue") {
+                Object.entries(data[1]).forEach(([outerKey, innerFields]) => {
+                  Object.entries(innerFields).forEach(
+                    ([innerKey, fieldData]) => {
+                      if (fieldData.groupid === id.groupid) {
+                        tableData.push([fieldData.fieldname, fieldData.value]);
+                      }
+                    }
+                  );
+                });
+              }
+            });
+          });
+
+          
+          autoTable(doc, {
+            head: [["Question", "Answer"]],
+            body: tableData,
+            startY: 180,
+            styles: { overflow: "linebreak", fontSize: 12 },
+            columnStyles: {
+              0: { cellWidth: "auto" },
+              1: { cellWidth: "auto" },
+            },
+          });
+
+          const pdfBlob = doc.output("blob");
+          resolve(pdfBlob);
+        };
+
+        image.onerror = () => {
+          reject("Failed to load the image.");
+        };
+      } else {
+        reject("No image found in the HTML content.");
+      }
+    });
+  };
+
   const handleSubmit = async () => {
+    setLoadingOverlay(true);
+    saveStepData();
     const formSubmissionData = {
       textFields: textFieldData,
+      Date: date,
       checkboxes: checkboxData,
       formid: formdata.formid,
-      Date: date,
       textAreaValue: textAreaValue,
       otheroption: option,
     };
+    setsubmitdata(formSubmissionData);
+    console.log("form data", formSubmissionData);
+
     if (validateFields()) {
-      console.log("validate");
       const response = await axios.post(
         "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
         // "http://localhost:8000/submit-form",
         formSubmissionData
       );
-      // console.log("response...", formSubmissionData);
+      // handledemo(formSubmissionData);
+      const pdfBlob = await handlepdf(formSubmissionData);
+
+      //sending mail on successfully submit
+      if (response.statusText === "OK") {
+        if (formdata.onsubmitemail !== null) {
+          if (pdfBlob) {
+            const formData = new FormData();
+            formData.append("pdf", pdfBlob, "form-data.pdf");
+
+            try {
+              const response = await axios.post(
+                "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
+                // "http://localhost:8000/send-mail",
+                formData,
+                {
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                  },
+                }
+              );
+              console.log("Email sent successfully:", response.data);
+            } catch (error) {
+              console.error("Error sending email:", error);
+            }
+          } else {
+            console.log("PDF generation failed, cannot proceed.");
+          }
+        }
+      }
+
+      //Show on successfully submit
+      if (formdata.onsubmitmessage) {
+        await toast.success(formdata.onsubmitmessage, {
+          position: "top-center",
+        });
+      }
+
+      //Redirect on successfully submit
+      if (formdata.onsubmitredirect !== null) {
+        window.location.href = formdata.onsubmitredirect;
+      }
+
+      // console.log("response...", response);
       setTextFieldData({});
       setCheckboxData([]);
       setoption("");
       setdate({});
-      setTextAreaValue({});
+      setTextAreaValue("");
       setSelectedDate(null);
     } else {
       console.log("Validation failed, cannot proceed.");
     }
+    // Hide the loader
+    setLoadingOverlay(false);
   };
 
   //save step data in textfield and checkbox
@@ -337,26 +660,41 @@ function FormLayout() {
     setFilteredData(filtered);
   }, [checkboxData]);
 
-  const handleDateChange = (newValue, id) => {
+  const handleDateChange = (newValue, id, fieldname) => {
     if (newValue) {
       const formattedDate = dayjs(newValue).format("DD MM YYYY");
-      setdate({ formattedDate, id });
+      setdate({ formattedDate, id, fieldname });
     }
     setSelectedDate(newValue);
   };
 
   //handle other option change function
-  const handleoptionChange = (e, id, groupid) => {
+  // const handleoptionChange = (e, id, groupid, fieldname) => {
+  //   const options = e.target.value;
+
+  //   setoption((prevOptions) => ({
+  //     ...prevOptions,
+  //     [id]: {
+  //       ...prevOptions[id],
+  //       options: options,
+  //       groupid: groupid,
+  //       fieldname: fieldname,
+  //     },
+  //   }));
+  // };
+
+  const handleoptionChange = (e, id, groupid, fieldname) => {
     const options = e.target.value;
 
-    setoption((prevOptions) => ({
-      ...prevOptions,
-      [id]: {
-        ...prevOptions[id],
-        options: options,
-        groupid: groupid,
+    setoption((prevData) => [
+      ...prevData.filter((item) => item.id !== id), // Remove existing entry for this id
+      {
+        id,
+        groupid,
+        options,
+        fieldname,
       },
-    }));
+    ]);
   };
 
   //rendering fields
@@ -371,7 +709,7 @@ function FormLayout() {
                 label={field.fieldtitle}
                 value={selectedDate}
                 onChange={(newValue) =>
-                  handleDateChange(newValue, field.fieldid)
+                  handleDateChange(newValue, field.fieldid, field.fieldtitle)
                 }
                 sx={{ width: "70%" }}
                 slots={{
@@ -408,8 +746,10 @@ function FormLayout() {
               label={field.fieldtitle}
               variant="outlined"
               sx={{ mb: 2, width: "70%" }}
-              value={textFieldData[field.fieldid] || ""}
-              onChange={(e) => handleTextfieldChange(e, field.fieldid)}
+              value={textFieldData[field.fieldid]?.value || ""}
+              onChange={(e) =>
+                handleTextfieldChange(e, field.fieldid, field.fieldtitle)
+              }
               error={Boolean(errors[field.fieldid])}
               helperText={errors[field.fieldid]}
             />
@@ -465,7 +805,8 @@ function FormLayout() {
                             e,
                             groupdata,
                             field.groupid,
-                            field.fieldid
+                            field.fieldid,
+                            field.fieldinfo
                           )
                         }
                       />
@@ -482,9 +823,19 @@ function FormLayout() {
                   fullWidth
                   variant="outlined"
                   sx={{ mb: 2 }}
-                  value={option[field.fieldid]?.options || ""}
+                  value={
+                    Array.isArray(option) // Check if option is an array
+                      ? option.find((item) => item.id === field.fieldid)
+                          ?.options || ""
+                      : ""
+                  }
                   onChange={(e) =>
-                    handleoptionChange(e, field.fieldid, field.groupid)
+                    handleoptionChange(
+                      e,
+                      field.fieldid,
+                      field.groupid,
+                      field.fieldinfo
+                    )
                   }
                 />
               </Grid>
@@ -527,7 +878,12 @@ function FormLayout() {
               value={textAreaValue[field.groupid]?.[field.fieldid]?.value || ""}
               maxRows={4}
               onChange={(e) =>
-                handleTextAreaChange(e, field.fieldid, field.groupid)
+                handleTextAreaChange(
+                  e,
+                  field.fieldid,
+                  field.groupid,
+                  field.fieldinfo
+                )
               }
             />
 
@@ -572,6 +928,24 @@ function FormLayout() {
 
   return (
     <>
+      {loadingOverlay && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(255, 255, 255, 0.7)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000, // Ensure it’s above all other content
+          }}
+        >
+          <CircularProgress color="secondary" />
+        </Box>
+      )}
       {loading ? (
         <Box
           display="flex"
@@ -584,6 +958,7 @@ function FormLayout() {
       ) : (
         <>
           <Paper
+            id="field-form"
             elevation={3}
             sx={{ padding: 4, maxWidth: "800px", margin: "0 auto" }}
           >
@@ -626,13 +1001,15 @@ function FormLayout() {
 
               <Grid item>
                 {currentGroupIndex === groupList.length - 1 ? (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleSubmit}
-                  >
-                    Submit
-                  </Button>
+                  <>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleSubmit}
+                    >
+                      Submit
+                    </Button>
+                  </>
                 ) : (
                   <Button variant="contained" size="large" onClick={handleNext}>
                     Next
@@ -640,6 +1017,12 @@ function FormLayout() {
                 )}
               </Grid>
             </Grid>
+            <ToastContainer />
+            {/* <PdfForm
+              formdata={formdata}
+              fielddata={fielddata}
+              stepdata={stepdata}
+            /> */}
           </Paper>
         </>
       )}
