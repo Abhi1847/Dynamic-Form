@@ -464,7 +464,7 @@ function FormLayout() {
       const pdfBlob = await handlepdf(formSubmissionData);
 
       //sending mail on successfully submit
-      if (response.statusText === "OK") {
+      if (response.status === 200) {
         if (formdata.onsubmitemail !== null) {
           console.log("hii", pdfBlob);
           if (pdfBlob) {
