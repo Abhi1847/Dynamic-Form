@@ -51,12 +51,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
-          `http://localhost:8000/form/${Name}`
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
+          // `http://localhost:8000/form/${Name}`
         );
         const fieldresponse = await axios.get(
-          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
-          `http://localhost:8000/field/${Name}`
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
+          // `http://localhost:8000/field/${Name}`
         );
 
         setformdata(formresponse.data);
@@ -310,124 +310,6 @@ function FormLayout() {
     }));
   };
 
-  // const handledemo = (formSubmissionData) => {
-  //   return new Promise((resolve, reject) => {
-  //     let yPosition = 10;
-  //     const parser = new DOMParser();
-  //     const docu = parser.parseFromString(
-  //       formdata.formdescription,
-  //       "text/html"
-  //     );
-  //     const imgTag = docu.querySelector("img");
-
-  //     if (imgTag) {
-  //       const imgURL = imgTag.src;
-  //       const doc = new jspdf("p", "mm", "a4");
-  //       const componentwidth = doc.internal.pageSize.getWidth();
-  //       const componentheight = doc.internal.pageSize.getHeight();
-
-  //       const image = new Image();
-  //       image.src = imgURL;
-  //       image.onload = function () {
-  //         const imgWidth = 40;
-  //         const imgHeight = (image.height / image.width) * imgWidth;
-
-  //         doc.addImage(image, "JPEG", 10, yPosition, imgWidth, imgHeight);
-  //         const textContent = docu.body.textContent || "";
-  //         const pageWidth = componentwidth - 10;
-
-  //         const fontSize = 12;
-  //         doc.setFontSize(fontSize);
-
-  //         const splitText = doc.splitTextToSize(textContent, pageWidth);
-
-  //         splitText.forEach((line) => {
-  //           if (yPosition > componentheight - 10) {
-  //             doc.addPage();
-  //             yPosition = 10;
-  //           }
-  //           doc.text(line, 10, yPosition);
-  //           yPosition += 5;
-  //         });
-  //         const tableData = [];
-  //         yPosition = 180;
-  //         Object.entries(formSubmissionData).forEach((data) => {
-  //           if (yPosition > componentheight - 10) {
-  //             doc.addPage();
-  //             yPosition = 10;
-  //           }
-
-  //           if (data[0] === "textFields") {
-  //             Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
-  //               tableData.push([fieldData.name, fieldData.value]);
-  //             });
-  //           }
-
-  //           if (data[0] === "Date") {
-  //             const { fieldname, formattedDate } = data[1];
-  //             tableData.push([fieldname, formattedDate]);
-  //           }
-  //         });
-
-  //         groupListid.forEach((id) => {
-  //           Object.entries(formSubmissionData).forEach((data) => {
-  //             if (data[0] === "checkboxes" || data[0] === "otheroption") {
-  //               data[1].forEach((checkbox) => {
-  //                 if (checkbox.id === id.groupid) {
-  //                   tableData.push([
-  //                     checkbox.fieldname,
-  //                     checkbox.options.join(" , "),
-  //                   ]);
-  //                 }
-  //               });
-  //             }
-
-  //             if (data[0] === "textAreaValue") {
-  //               Object.entries(data[1]).forEach(([outerKey, innerFields]) => {
-  //                 Object.entries(innerFields).forEach(
-  //                   ([innerKey, fieldData]) => {
-  //                     if (fieldData.groupid === id.groupid) {
-  //                       tableData.push([fieldData.fieldname, fieldData.value]);
-  //                     }
-  //                   }
-  //                 );
-  //               });
-  //             }
-  //           });
-  //         });
-
-  //         Object.entries(formSubmissionData).forEach((data) => {
-  //           if (data[0] === "otheroption") {
-  //             Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
-  //               tableData.push([fieldData.fieldname, fieldData.options]);
-  //             });
-  //           }
-  //         });
-
-  //         autoTable(doc, {
-  //           head: [["Question", "Answer"]],
-  //           body: tableData,
-  //           startY: 180,
-  //           styles: { overflow: "linebreak", fontSize: 12 },
-  //           columnStyles: {
-  //             0: { cellWidth: "auto" },
-  //             1: { cellWidth: "auto" },
-  //           },
-  //         });
-
-  //         const pdfBlob = doc.output("blob");
-  //         resolve(pdfBlob);
-  //       };
-
-  //       image.onerror = () => {
-  //         reject("Failed to load the image.");
-  //       };
-  //     } else {
-  //       reject("No image found in the HTML content.");
-  //     }
-  //   });
-  // };
-
   const handlepdf = (formSubmissionData) => {
     return new Promise((resolve, reject) => {
       let yPosition = 10;
@@ -573,8 +455,8 @@ function FormLayout() {
 
     if (validateFields()) {
       const response = await axios.post(
-        // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-        "http://localhost:8000/submit-form",
+        "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+        // "http://localhost:8000/submit-form",
         formSubmissionData
       );
       // handledemo(formSubmissionData);
@@ -591,8 +473,8 @@ function FormLayout() {
 
             try {
               const response = await axios.post(
-                // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
-                "http://localhost:8000/send-mail",
+                "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
+                // "http://localhost:8000/send-mail",
                 formData,
                 {
                   headers: {
