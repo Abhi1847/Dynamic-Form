@@ -51,12 +51,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
-          // `http://localhost:8000/form/${Name}`
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
+          `http://localhost:8000/form/${Name}`
         );
         const fieldresponse = await axios.get(
-          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
-          // `http://localhost:8000/field/${Name}`
+          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
+          `http://localhost:8000/field/${Name}`
         );
 
         setformdata(formresponse.data);
@@ -428,16 +428,7 @@ function FormLayout() {
   //   });
   // };
 
-  const blobToBase64 = async (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]); // Get Base64 part
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const handlepdf = async (formSubmissionData) => {
+  const handlepdf = (formSubmissionData) => {
     return new Promise((resolve, reject) => {
       let yPosition = 10;
       const parser = new DOMParser();
@@ -553,8 +544,7 @@ function FormLayout() {
           });
 
           const pdfBlob = doc.output("blob");
-          const pdfBase64 = blobToBase64(pdfBlob);
-          resolve(pdfBase64);
+          resolve(pdfBlob);
           console.log("pdf data", pdfBlob);
         };
 
@@ -583,8 +573,8 @@ function FormLayout() {
 
     if (validateFields()) {
       const response = await axios.post(
-        "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-        // "http://localhost:8000/submit-form",
+        // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+        "http://localhost:8000/submit-form",
         formSubmissionData
       );
       // handledemo(formSubmissionData);
@@ -596,18 +586,17 @@ function FormLayout() {
           if (pdfBlob) {
             console.log("pdf data is:", pdfBlob);
 
-            const formData = {
-              pdf: pdfBlob,
-            };
+            const formData = new FormData();
+            formData.append("pdf", pdfBlob, "form-data.pdf");
 
             try {
               const response = await axios.post(
-                "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
-                // "http://localhost:8000/send-mail",
+                // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
+                "http://localhost:8000/send-mail",
                 formData,
                 {
                   headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "multipart/form-data",
                   },
                 }
               );
