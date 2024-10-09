@@ -466,6 +466,7 @@ function FormLayout() {
       //sending mail on successfully submit
       if (response.statusText === "OK") {
         if (formdata.onsubmitemail !== null) {
+          console.log("hii", pdfBlob);
           if (pdfBlob) {
             console.log("pdf data is:", pdfBlob);
 
