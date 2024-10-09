@@ -103,7 +103,7 @@ function FormLayout() {
       const uniqueGroups = new Map();
       fielddata.data.forEach((item) => {
         if (item.grouptitle !== null) {
-          uniqueGroups.set(item.groupid, item.grouptitle); 
+          uniqueGroups.set(item.groupid, item.grouptitle);
         }
       });
       const uniqueGroupsArray = Array.from(
@@ -181,7 +181,6 @@ function FormLayout() {
               item.options?.includes("Other")
           );
 
-          
           if (otherOptionSelected) {
             const otherText = option.find(
               (item) => item.id === field.fieldid
@@ -227,9 +226,9 @@ function FormLayout() {
         }
       });
 
-    setErrors(newErrors); 
+    setErrors(newErrors);
 
-    return isValid; 
+    return isValid;
   };
 
   //handle next button function
@@ -492,7 +491,6 @@ function FormLayout() {
 
           groupListid.forEach((id) => {
             Object.entries(formSubmissionData).forEach((data) => {
-              
               if (data[0] === "checkboxes" || data[0] === "otheroption") {
                 data[1].forEach((checkbox) => {
                   if (checkbox.id === id.groupid) {
@@ -534,7 +532,6 @@ function FormLayout() {
             });
           });
 
-          
           autoTable(doc, {
             head: [["Question", "Answer"]],
             body: tableData,
