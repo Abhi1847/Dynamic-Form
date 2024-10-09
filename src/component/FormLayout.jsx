@@ -51,12 +51,12 @@ function FormLayout() {
         setloading(true);
 
         const formresponse = await axios.get(
-          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
-          `http://localhost:8000/form/${Name}`
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/form/${Name}`
+          // `http://localhost:8000/form/${Name}`
         );
         const fieldresponse = await axios.get(
-          // `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
-          `http://localhost:8000/field/${Name}`
+          `https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/field/${Name}`
+          // `http://localhost:8000/field/${Name}`
         );
 
         setformdata(formresponse.data);
@@ -583,8 +583,8 @@ function FormLayout() {
 
     if (validateFields()) {
       const response = await axios.post(
-        // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
-        "http://localhost:8000/submit-form",
+        "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/submit-form",
+        // "http://localhost:8000/submit-form",
         formSubmissionData
       );
       // handledemo(formSubmissionData);
@@ -602,8 +602,8 @@ function FormLayout() {
 
             try {
               const response = await axios.post(
-                // "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
-                "http://localhost:8000/send-mail",
+                "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
+                // "http://localhost:8000/send-mail",
                 formData,
                 {
                   headers: {
