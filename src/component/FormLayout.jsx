@@ -461,38 +461,38 @@ function FormLayout() {
       );
       console.log("hii");
       // handledemo(formSubmissionData);
-      const pdfBlob = await handlepdf(formSubmissionData);
+      // const pdfBlob = await handlepdf(formSubmissionData);
 
-      //sending mail on successfully submit
-      if (response.statusText === "OK") {
-        if (formdata.onsubmitemail !== null) {
-          console.log("hii", pdfBlob);
-          if (pdfBlob) {
-            console.log("pdf data is:", pdfBlob);
+      // //sending mail on successfully submit
+      // if (response.statusText === "OK") {
+      //   if (formdata.onsubmitemail !== null) {
+      //     console.log("hii", pdfBlob);
+      //     if (pdfBlob) {
+      //       console.log("pdf data is:", pdfBlob);
 
-            const formData = new FormData();
-            formData.append("pdf", pdfBlob, "form-data.pdf");
+      //       const formData = new FormData();
+      //       formData.append("pdf", pdfBlob, "form-data.pdf");
 
-            try {
-              const response = await axios.post(
-                "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
-                // "http://localhost:8000/send-mail",
-                formData,
-                {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                  },
-                }
-              );
-              console.log("Email sent successfully:", response.data);
-            } catch (error) {
-              console.error("Error sending email:", error);
-            }
-          } else {
-            console.log("PDF generation failed, cannot proceed.");
-          }
-        }
-      }
+      //       try {
+      //         const response = await axios.post(
+      //           "https://c3yl8he1e1.execute-api.us-west-2.amazonaws.com/dev/send-mail",
+      //           // "http://localhost:8000/send-mail",
+      //           formData,
+      //           {
+      //             headers: {
+      //               "Content-Type": "multipart/form-data",
+      //             },
+      //           }
+      //         );
+      //         console.log("Email sent successfully:", response.data);
+      //       } catch (error) {
+      //         console.error("Error sending email:", error);
+      //       }
+      //     } else {
+      //       console.log("PDF generation failed, cannot proceed.");
+      //     }
+      //   }
+      // }
 
       //Show on successfully submit
       if (formdata.onsubmitmessage) {
