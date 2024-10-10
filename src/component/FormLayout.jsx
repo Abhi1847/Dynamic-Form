@@ -33,6 +33,7 @@ function FormLayout() {
   const [filteredData, setFilteredData] = useState([]);
   const [stepdata, setstepdata] = useState([]);
   const [textFieldData, setTextFieldData] = useState({});
+  const [EmailData, setEmailData] = useState({});
   const [checkboxData, setCheckboxData] = useState([]);
   const [loading, setloading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -142,6 +143,8 @@ function FormLayout() {
         field.grouptitle === currentGroupTitle || field.grouptitle === null
     );
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     // Validate required TextFields
     currentGroupFields
       ?.filter((field) => field.fieldtype === "TextField" && field.isrequired)
@@ -152,6 +155,29 @@ function FormLayout() {
           newErrors[field.fieldid] = (
             <Typography variant="body2" color="error">
               {field.fieldtitle} field is required
+            </Typography>
+          );
+        }
+      });
+
+    // Validate required Email
+    currentGroupFields
+      ?.filter((field) => field.fieldtype === "Email" && field.isrequired)
+      .forEach((field) => {
+        const fieldValue = EmailData[field.fieldid]?.value || "";
+        if (!fieldValue.trim()) {
+          isValid = false;
+          newErrors[field.fieldid] = (
+            <Typography variant="body2" color="error">
+              {field.fieldtitle} field is required
+            </Typography>
+          );
+        } else if (!emailRegex.test(fieldValue)) {
+          // Email format validation
+          isValid = false;
+          newErrors[field.fieldid] = (
+            <Typography variant="body2" color="error">
+              Please enter a valid email address
             </Typography>
           );
         }
@@ -364,6 +390,11 @@ function FormLayout() {
                 tableData.push([fieldData.name, fieldData.value]);
               });
             }
+            if (data[0] === "email") {
+              Object.entries(data[1]).forEach(([fieldId, fieldData]) => {
+                tableData.push([fieldData.name, fieldData.value]);
+              });
+            }
 
             if (data[0] === "Date") {
               const { fieldname, formattedDate } = data[1];
@@ -449,9 +480,10 @@ function FormLayout() {
       formid: formdata.formid,
       textAreaValue: textAreaValue,
       otheroption: option,
+      email: EmailData,
     };
     setsubmitdata(formSubmissionData);
-    console.log("form data", formSubmissionData);
+    console.log("form data", formSubmissionData.email);
 
     if (validateFields()) {
       const response = await axios.post(
@@ -470,8 +502,12 @@ function FormLayout() {
           if (pdfBlob) {
             console.log("pdf data is:", pdfBlob);
 
+            const emailId = Object.keys(EmailData)[0]; // Get the first key
+            const emailValue = EmailData[emailId].value;
+
             const formData = new FormData();
             formData.append("pdf", pdfBlob, "form-data.pdf");
+            formData.append("email", emailValue);
 
             try {
               const response = await axios.post(
@@ -512,6 +548,7 @@ function FormLayout() {
       setoption("");
       setdate({});
       setTextAreaValue("");
+      setEmailData({});
       setSelectedDate(null);
     } else {
       console.log("Validation failed, cannot proceed.");
@@ -550,6 +587,18 @@ function FormLayout() {
       setdate({ formattedDate, id, fieldname });
     }
     setSelectedDate(newValue);
+  };
+
+  const handleemailchange = (e, fieldid, name) => {
+    setEmailData({
+      ...EmailData,
+      [fieldid]: {
+        value: e.target.value,
+        name: name,
+      },
+    });
+
+    setErrors({ ...errors, [fieldid]: false });
   };
 
   //handle other option change function
@@ -778,6 +827,37 @@ function FormLayout() {
             )}
           </Grid>
         );
+      case "Email":
+        return (
+          <Grid item xs={12} sm={6} md={6}>
+            <TextField
+              fullWidth
+              type="email"
+              label={field.fieldtitle}
+              variant="outlined"
+              sx={{ mb: 2, width: "70%" }}
+              value={EmailData[field.fieldid]?.value || ""}
+              onChange={(e) =>
+                handleemailchange(e, field.fieldid, field.fieldtitle)
+              }
+              error={Boolean(errors[field.fieldid])}
+              helperText={errors[field.fieldid]}
+            />
+            {field.isrequired ? (
+              <span
+                style={{
+                  color: "red",
+                  marginLeft: "10px",
+                  fontSize: "1.5em",
+                }}
+              >
+                *
+              </span>
+            ) : (
+              ""
+            )}
+          </Grid>
+        );
       default:
         return null;
     }
@@ -849,6 +929,7 @@ function FormLayout() {
             <div
               dangerouslySetInnerHTML={{ __html: formdata.formdescription }}
             />
+
             <Box display="flex" flexDirection="row" flexWrap="wrap">
               <Grid
                 container
